@@ -1,0 +1,7 @@
+---
+etcd_group_name: "{% if 'etcd' in group_names %}etcd{% else %}master{% endif %}"
+node_ip: "{{ hostvars | get_node_ip( inventory_hostname, etcd_group_name) }}"
+etcd_nodes: "{{ hostvars | get_cluster_node_ips( etcd_group_name) }}"
+node_name: "{{ hostvars | get_node_name( inventory_hostname ) }}"
+etcd_leader: "{{ hostvars | is_leader( ansible_host, etcd_group_name) | bool }}"
+

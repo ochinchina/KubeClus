@@ -1,0 +1,14 @@
+---
+- name: print etcd nodes
+  debug:
+    msg: "{{ etcd_nodes }}"
+- name: print node ip
+  debug:
+    msg: "{{ node_ip }}"
+
+- name: copy etcd.yaml to /etc/kubernetes/manifests
+  template:
+    src: etcd.yaml.j2
+    dest: /etc/kubernetes/manifests/etcd.yaml
+    mode: 0755
+  become: True

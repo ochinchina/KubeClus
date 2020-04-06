@@ -1,0 +1,15 @@
+---
+- name: install docker for debian family
+  include: debian-docker.yml
+  when: ansible_os_family == "Debian"
+  become: True
+
+- name: install docker for RedHat family
+  include: redhat-docker.yml
+  when: ansible_os_family == "RedHat"
+  become: True
+
+- name: start docker
+  include: start-docker.yml
+  become: True
+

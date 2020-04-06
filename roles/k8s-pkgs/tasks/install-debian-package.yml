@@ -1,0 +1,41 @@
+---
+- name: add the apt-key for aliyun
+  apt_key:
+    url: https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg
+    state: present
+
+- name: add the aliyun-k8s.list
+  copy:
+    content: |
+      deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
+    dest: /etc/apt/sources.list.d/aliyun-k8s.list
+
+- name: install k8s packages
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    update_cache: yes
+
+- name: systemctl reload kubelet.service
+  systemd:
+    name: kubelet
+    daemon_reload: yes
+    enabled: yes
+
+- name: download helm package
+  get_url:
+    url: https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz
+    dest: "{{ ansible_env.HOME }}/helm-v3.0.2-linux-amd64.tar.gz"
+    timeout: 60
+
+- name: uncompress helm package
+  shell: |
+    cd {{ ansible_env.HOME }}
+    tar -zxvf helm-v3.0.2-linux-amd64.tar.gz
+    cp linux-amd64/helm /usr/local/bin/helm
+    rm -rf helm-v3.0.2-linux-amd64.tar.gz
+    rm -rf linux-amd64
+

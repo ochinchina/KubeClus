@@ -1,0 +1,55 @@
+---
+- name: set etcd bind address
+  set_fact:
+    etcd_nodes: "{{ hostvars | get_cluster_node_ips( 'master' ) }}"
+
+- name: make /var/lib/kubelet/ directory
+  file:
+    path: /var/lib/kubelet
+    state: directory
+  become: True
+
+- name: copy kubelet config
+  template:
+    src: kubelet-config.yaml.j2
+    dest: /var/lib/kubelet/config.yaml
+  become: True
+
+- name: copy k8s TLS certificates
+  include: copy-certs.yml
+  when: not apiserver_leader
+
+- name: copy kubeadm init config.yaml
+  template:
+    src: config.yml.j2
+    dest: "{{ ansible_env.HOME }}/kubeadm-init-config.yml"
+
+- name:  create kubernetes master with kubeadm 
+  command: "kubeadm init --config {{ ansible_env.HOME }}/kubeadm-init-config.yml --ignore-preflight-errors all"
+  become: True
+
+- name: remove kubeadm init config.yaml
+  file:
+    path: "{{ ansible_env.HOME }}/kubeadm-init-config.yml"
+    state: absent
+
+- name: remove $HOME/.kube directory
+  file:
+    state: absent
+    path: "{{ ansible_env.HOME }}/.kube"
+
+- name: create $HOME/.kube directory
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+
+- name: copy kubernetes configuration file
+  shell:  cp -i /etc/kubernetes/admin.conf /{{ ansible_env.HOME }}/.kube/config
+  become: True
+
+- name: change the owner of $HOME/.kube/config
+  file:
+    path: "{{ ansible_env.HOME }}/.kube/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: True

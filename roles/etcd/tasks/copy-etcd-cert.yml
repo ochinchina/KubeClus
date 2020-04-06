@@ -1,0 +1,8 @@
+---
+- name: copy the etcd cert files
+  copy:
+    src: "/tmp/etcd-certs/{{ item }}"
+    dest: "/etc/kubernetes/pki/etcd/{{ item }}"
+    force: yes
+  with_items: "{{ etcd_cert_files }}"
+  become: True

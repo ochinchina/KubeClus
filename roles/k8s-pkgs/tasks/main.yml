@@ -1,0 +1,11 @@
+---
+- include: install-redhat-k8s-rpm.yml
+  when: ansible_os_family == "RedHat"
+  become: True
+
+- include: install-debian-package.yml
+  when: ansible_os_family == "Debian"
+  become: True
+
+- include: common_settings.yml
+  become: True

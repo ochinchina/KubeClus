@@ -1,0 +1,11 @@
+---
+etcd_cert_files:
+  - ca.pem
+  - ca-key.pem
+  - client.pem
+  - client-key.pem
+  - peer.pem
+  - peer-key.pem
+  - server.pem
+  - server-key.pem
+

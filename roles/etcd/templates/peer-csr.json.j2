@@ -1,0 +1,18 @@
+{
+    "CN": "kube-etcd-peer",
+    "key": {
+               "algo": "rsa",
+               "size": 2048
+    },
+    "hosts": [
+               {% for node in etcd_nodes %}
+               "{{ node }}",
+               {% endfor %}
+               "localhost",
+               "127.0.0.1"
+    ],
+    "names": [{
+              "O": "system:masters"
+    }]
+}
+

@@ -1,0 +1,58 @@
+---
+- name: modify /etc/security/limits.conf
+  blockinfile:
+    path: /etc/security/limits.conf
+    block: |
+      root soft nofile 65536
+      root hard nofile 65536
+      nls soft nproc 16384
+      nls hard nproc 16384
+      nls soft nofile 65536
+      nls hard nofile 65536
+
+- name: run ulimit
+  shell: ulimit -n 65536
+  ignore_errors: yes
+
+- name: disable firewalld in RedHat
+  systemd:
+    name: firewalld
+    enabled: False
+    state: stopped
+  ignore_errors: yes
+  when: ansible_os_family == "RedHat"
+
+- name: disable firewalld in Debian
+  systemd:
+    name: ufw
+    enabled: False
+    state: stopped
+  ignore_errors: yes
+  when: ansible_os_family == "Debian"
+
+
+- name: disable swap
+  command: swapoff -a
+
+- name: disable swap permanently
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes
+
+- name: check /etc/selinux/config existence
+  stat:
+    path: /etc/selinux/config
+  register: se_st
+
+- name: install python-selinux
+  apt:
+    name: python-selinux
+    state: present
+  when: ansible_os_family == "Debian" and se_st.stat.exists
+
+- name: disable SELINUX
+  selinux:
+    state: disabled
+  when: se_st.stat.exists

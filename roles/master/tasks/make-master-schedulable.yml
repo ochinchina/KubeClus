@@ -1,0 +1,4 @@
+---
+- name: make master nodes schedulable
+  command: kubectl taint nodes --all node-role.kubernetes.io/master-
+

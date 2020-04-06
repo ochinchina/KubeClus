@@ -1,0 +1,56 @@
+---
+dns_domain: cluster.local
+cluster_name: cluster.local
+kube_service_addresses: 10.96.0.0/16
+kube_apiserver_ip: "{{ hostvars | get_node_ip( inventory_hostname, 'master' ) }}"
+kube_apiserver_count: "{{ hostvars | get_count_in_group( 'master' ) }}"
+kube_pods_subnet: 10.244.0.0/16
+kube_version: v1.18.0
+
+kube_controller_node_monitor_grace_period: 40s
+kube_controller_node_monitor_period: 5s
+kube_controller_pod_eviction_timeout: 5m0s
+kube_network_node_prefix: 24
+kube_controller_terminated_pod_gc_threshold: 12500
+kube_controller_manager_bind_address: "{{ kube_apiserver_ip }}"
+kube_scheduler_bind_address: "{{ kube_apiserver_ip }}"
+kube_proxy_bind_address: "{{ kube_apiserver_ip }}"
+kube_proxy_client_accept_content_types: ''
+kube_proxy_client_burst: 10
+kube_proxy_client_content_type: application/vnd.kubernetes.protobuf
+kube_proxy_client_kubeconfig: ''
+kube_proxy_client_qps: 5
+kube_proxy_config_sync_period: 15m0s
+kube_proxy_conntrack_max_per_core: 32768
+kube_proxy_conntrack_min: 131072
+kube_proxy_conntrack_tcp_close_wait_timeout: 1h0m0s
+kube_proxy_conntrack_tcp_established_timeout: 24h0m0s
+kube_proxy_enable_profiling: false
+kube_proxy_healthz_bind_address: "127.0.0.1:10256"
+
+kube_proxy_mode: ipvs
+kube_proxy_exclude_cidrs: []
+kube_proxy_min_sync_period: 0s
+kube_proxy_scheduler: rr
+kube_proxy_sync_period: 30s
+kube_proxy_strict_arp: false
+kube_proxy_nodeport_addresses: []
+kube_proxy_oom_score_adj: -999
+kube_proxy_port_range: ''
+kube_proxy_udp_idle_timeout: 250ms
+kubelet_cluster_dns:
+  - "10.96.0.10"
+
+apiserver_sans:
+  - "kubernetes"
+  - "kubernetes.default"
+  - "kubernetes.default.svc"
+  - "kubernetes.default.svc.{{ dns_domain }}"
+  - "{{ kube_apiserver_ip }}"
+  - "localhost"
+  - "127.0.0.1"
+
+etcd_cert_dir: /etc/kubernetes/pki/etcd
+kube_etcd_cacert_file: ca.pem
+kube_etcd_cert_file: client.pem
+kube_etcd_key_file: client-key.pem

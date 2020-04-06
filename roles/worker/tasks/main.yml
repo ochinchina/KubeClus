@@ -1,0 +1,39 @@
+---
+- name: print kubeadm join
+  debug:
+    msg: "{{ kubeadm_join }}"
+
+- name: join the kubeadm
+  command: "{{ kubeadm_join }} --ignore-preflight-errors all"
+
+- name: set apiservers
+  set_fact:
+    apiservers: "{{ hostvars | get_cluster_node_ips( 'master' ) }}"
+
+- name: copy apiserver-proxy.conf
+  template:
+    src: "apiserver-proxy.conf.j2"
+    dest: /etc/kubernetes/apiserver-proxy.conf
+  become: True
+
+- name: copy kube-apiserver-proxy.yaml
+  copy:
+    src: kube-apiserver-proxy.yaml
+    dest: /etc/kubernetes/manifests
+  become: True
+
+- name: get kubelet.conf
+  shell: cat /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+  become: True
+
+- name: change apiserver
+  set_fact:
+    new_kubelet_conf: "{{ kubelet_conf.stdout | change_apiserver_proxy( '127.0.0.1' ) }}"
+
+- name: copy new kubelet.conf
+  copy:
+    content: "{{ new_kubelet_conf }}"
+    dest: /etc/kubernetes/kubelet.conf
+  become: True
+  notify: restart kubelet

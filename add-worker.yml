@@ -1,0 +1,18 @@
+---
+- hosts: master
+  vars:
+    leader_node: "{{ hostvars | get_leader( 'master' ) }}"
+  tasks:
+    - include_role:
+        name: worker
+        tasks_from: kubeadm-join
+
+- hosts: worker
+  vars:
+    leader_node: "{{ hostvars | get_leader( 'master' ) }}"
+    kubeadm_join: "{{ hostvars[ leader_node ]['kubeadm_join'] }}"
+  roles:
+    - docker
+    - k8s-pkgs
+    - worker
+  become: True

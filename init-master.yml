@@ -1,0 +1,10 @@
+- hosts: all
+  roles: 
+  #- docker
+  - k8s-pkgs
+
+- hosts: master
+  roles: 
+  - etcd
+  - master
+

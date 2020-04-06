@@ -1,0 +1,14 @@
+---
+- name: get apiserver leader
+  set_fact:
+    apiserver_leader: "{{ hostvars | is_leader( inventory_hostname, 'master' ) | bool }}"
+    master_is_schedulable: True
+
+- include: create-apiserver-certs.yml
+  when: apiserver_leader
+
+- include: start-k8s.yml
+
+- include: flannel-net.yml
+  when: apiserver_leader
+

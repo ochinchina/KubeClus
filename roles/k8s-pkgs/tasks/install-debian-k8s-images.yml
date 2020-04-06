@@ -1,0 +1,19 @@
+---
+- name: pull k8s images
+  docker_image:
+    name: "{{ k8s_image_repository | default('registry.cn-hangzhou.aliyuncs.com/google_containers') }}/{{ item }}"
+    source: pull
+  with_items: "{{ k8s_images }}"
+
+- name: tag the k8s images
+  docker_image:
+    name: "{{ k8s_image_repository | default('registry.cn-hangzhou.aliyuncs.com/google_containers') }}/{{ item }}"
+    repository: "k8s.gcr.io/{{ item }}"
+  with_items: "{{ k8s_images }}"
+  when: k8s_image_repository is not defined or k8s_image_repository != "k8s.gcr.io"
+
+- name: pull flannel images
+  docker_image:
+    name: "{{ item }}"
+    source:  pull
+  with_items: "{{ flannel_images }}"

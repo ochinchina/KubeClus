@@ -1,0 +1,37 @@
+---
+- name: check the /etc/kubernetes/pki/etcd exists
+  stat:
+    path: /etc/kubernetes/pki/etcd
+  register: stat_result_pki
+
+- name: create /etc/kubernetes/pki/etcd directory
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: directory
+    mode: 0755
+  when: not stat_result_pki.stat.exists
+  become: True
+
+- name: copy etcd cert
+  copy:
+    src: "/tmp/etcd-certs/{{ item }}"
+    dest: "/etc/kubernetes/pki/etcd/{{ item }}"
+    force: yes
+  with_items:
+    - ca.pem
+    - client.pem
+    - client-key.pem
+  become: True
+
+- name: copy k8s CA cert
+  copy:
+    src: "/tmp/k8s-certs/{{ item }}"
+    dest: "/etc/kubernetes/pki/{{ item }}"
+    force: yes
+  with_items:
+    - ca.crt
+    - ca.key
+    - sa.key
+    - sa.pub
+  become: True
+

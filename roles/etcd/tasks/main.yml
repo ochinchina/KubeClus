@@ -1,0 +1,24 @@
+---
+- include: create-etcd-dirs.yml
+
+- name: print etcd group name
+  debug:
+    msg: "{{ etcd_group_name }}"
+- name: print etcd_nodes
+  debug:
+    msg: "{{ etcd_nodes }}"
+
+- name: print etcd_leader
+  debug:
+    msg: "{{ etcd_leader }}"
+
+- name: create etcd TLS certificates
+  include: create-etcd-cert.yml
+  when: etcd_leader 
+
+- name: copy etcd certificates
+  include: copy-etcd-cert.yml
+  when: not etcd_leader
+
+- name: create etcd pod
+  include: create-etcd-pod.yml

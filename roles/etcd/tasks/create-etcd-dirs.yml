@@ -1,0 +1,43 @@
+---
+- name: copy cfssl and cfssljson
+  copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+  with_items:
+    - cfssl
+    - cfssljson
+  become: True
+
+- name: check /etc/kubernetes/pki/etcd exists
+  stat:
+    path: /etc/kubernetes/pki/etcd
+  register: stat_result_etcd
+
+- name: delete if /etc/kubernetes/pki/etcd directory
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: absent
+  when: stat_result_etcd.stat.exists
+  become: True
+
+- name: create /etc/kubernetes/pki/etcd directory
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: directory
+    mode: 0755
+  become: True
+
+- name: check /etc/kubernetes/manifests
+  stat:
+    path: /etc/kubernetes/manifests
+  register: stat_result_manifests
+
+- name: create /etc/kubernetes/manifests directory if it does not exist
+  file:
+    path: /etc/kubernetes/manifests
+    state: directory
+    mode: 0755
+  when: not stat_result_manifests.stat.exists
+  become: True
+

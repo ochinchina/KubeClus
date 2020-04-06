@@ -1,0 +1,15 @@
+---
+- name: copy flannel network deployment yaml from local
+  template:
+    src: "kube-flannel.yml.j2"
+    dest: "{{ ansible_env.HOME }}/kube-flannel.yml"
+    mode: 0555
+
+- name: deploy flannel to kubernetes
+  command: "kubectl apply -f {{ ansible_env.HOME }}/kube-flannel.yml"
+
+- name: remove temprary files
+  file:
+    path: "{{ ansible_env.HOME }}/kube-flannel.yml"
+    state: absent
+

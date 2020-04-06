@@ -1,0 +1,15 @@
+[master]
+#localhost ansible_ssh_private_key_file=/home/
+127.0.0.1 ansible_connection=local
+#centos-8-1 ansible_host=192.168.121.114 cluster_ip=192.168.25.2 ansible_user=vagrant ansible_ssh_private_key_file=/root/centos-8-1-cert.pem
+#centos-8-2 ansible_host=192.168.121.163 cluster_ip=192.168.25.3 ansible_user=vagrant ansible_ssh_private_key_file=/root/centos-8-2-cert.pem
+#centos-8-3 ansible_host=192.168.121.147 cluster_ip=192.168.25.4 ansible_user=vagrant ansible_ssh_private_key_file=/root/centos-8-3-cert.pem
+#[master-mix]
+#ubuntu-1804-1  ansible_host=192.168.121.227 ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/ubuntu-1804-1.pem
+#centos-8-1 ansible_host=192.168.121.114 ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/centos-8-1-cert.pem
+#centos-8-2 ansible_host=192.168.121.163 ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/centos-8-2-cert.pem
+[master:vars]
+flannel_iface=eth0
+#[worker]
+#centos-8-4 ansible_host=192.168.121.230 cluster_ip=192.168.25.5 ansible_user=vagrant ansible_ssh_private_key_file=/root/centos-8-4-cert.pem
+

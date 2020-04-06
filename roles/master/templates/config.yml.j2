@@ -1,0 +1,86 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: {{ kube_apiserver_ip | default("127.0.0.1") }}
+  bindPort: {{ kube_apiserver_port | default( "6443" ) }}
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+clusterName: {{ cluster_name }}
+etcd:
+  external:
+      endpoints:
+{% for node in etcd_nodes %}
+        - https://{{ node }}:2379
+{% endfor %}
+      caFile: {{ etcd_cert_dir }}/{{ kube_etcd_cacert_file }}
+      certFile: {{ etcd_cert_dir }}/{{ kube_etcd_cert_file }}
+      keyFile: {{ etcd_cert_dir }}/{{ kube_etcd_key_file }}
+imageRepository: {{ k8s_image_repository | default('registry.cn-hangzhou.aliyuncs.com/google_containers') }}
+dns:
+  type: CoreDNS
+networking:
+  dnsDomain: {{ dns_domain }}
+  serviceSubnet: {{ kube_service_addresses }}
+  podSubnet: {{ kube_pods_subnet }}
+kubernetesVersion: {{ kube_version }}
+controlPlaneEndpoint: {{ kube_apiserver_ip }}
+apiServer:
+  extraArgs:
+    bind-address: {{ kube_apiserver_ip }}
+    apiserver-count: "{{ kube_apiserver_count }}"
+    endpoint-reconciler-type: lease
+    allow-privileged: "true"
+  certSANs:
+{% for san in apiserver_sans %}
+  - {{ san }}
+{% endfor %}
+  timeoutForControlPlane: 5m0s
+controllerManager:
+  extraArgs:
+    node-monitor-grace-period: {{ kube_controller_node_monitor_grace_period }}
+    node-monitor-period: {{ kube_controller_node_monitor_period }}
+    pod-eviction-timeout: {{ kube_controller_pod_eviction_timeout }}
+    node-cidr-mask-size: "{{ kube_network_node_prefix }}"
+    terminated-pod-gc-threshold: "{{ kube_controller_terminated_pod_gc_threshold }}"
+    #bind-address: {{ kube_controller_manager_bind_address }}
+scheduler:
+  extraArgs:
+    #bind-address: {{ kube_scheduler_bind_address }}
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+bindAddress: {{ kube_proxy_bind_address }}
+clientConnection:
+ acceptContentTypes: {{ kube_proxy_client_accept_content_types }}
+ burst: {{ kube_proxy_client_burst }}
+ contentType: {{ kube_proxy_client_content_type }}
+ kubeconfig: {{ kube_proxy_client_kubeconfig }}
+ qps: {{ kube_proxy_client_qps }}
+clusterCIDR: {{ kube_pods_subnet }}
+configSyncPeriod: {{ kube_proxy_config_sync_period }}
+conntrack:
+ maxPerCore: {{ kube_proxy_conntrack_max_per_core }}
+ min: {{ kube_proxy_conntrack_min }}
+ tcpCloseWaitTimeout: {{ kube_proxy_conntrack_tcp_close_wait_timeout }}
+ tcpEstablishedTimeout: {{ kube_proxy_conntrack_tcp_established_timeout }}
+enableProfiling: {{ kube_proxy_enable_profiling }}
+healthzBindAddress: {{ kube_proxy_healthz_bind_address }}
+ipvs:
+ excludeCIDRs: {{ kube_proxy_exclude_cidrs }}
+ minSyncPeriod: {{ kube_proxy_min_sync_period }}
+ scheduler: {{ kube_proxy_scheduler }}
+ syncPeriod: {{ kube_proxy_sync_period }}
+ strictARP: {{ kube_proxy_strict_arp }}
+mode: {{ kube_proxy_mode }}
+nodePortAddresses: {{ kube_proxy_nodeport_addresses }}
+oomScoreAdj: {{ kube_proxy_oom_score_adj }}
+portRange: {{ kube_proxy_port_range }}
+udpIdleTimeout: {{ kube_proxy_udp_idle_timeout }}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+clusterDNS:
+{% for dns_address in kubelet_cluster_dns %}
+- {{ dns_address }}
+{% endfor %}

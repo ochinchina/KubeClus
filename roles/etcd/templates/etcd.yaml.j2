@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    component: etcd
+    tier: control-plane
+  name: etcd
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - etcd
+    - --name={% for node in etcd_nodes %}{% if node == node_ip %}infra{{ loop.index0 }}{% endif %}{% endfor %}
+
+    - --auto-tls=true
+    - --peer-auto-tls=true
+    - --client-cert-auth=true
+    - --key-file=/etc/kubernetes/pki/etcd/server-key.pem
+    - --cert-file=/etc/kubernetes/pki/etcd/server.pem
+    - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.pem
+    - --peer-client-cert-auth=true
+    - --peer-key-file=/etc/kubernetes/pki/etcd/peer-key.pem 
+    - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.pem
+    - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.pem
+    - --listen-peer-urls=https://{{ node_ip }}:2380
+    - --listen-client-urls=https://127.0.0.1:2379,https://{{ node_ip }}:2379
+    - --advertise-client-urls=https://{{ node_ip | default("127.0.0.1") }}:2379
+    - --initial-advertise-peer-urls=https://{{ node_ip | default( "127.0.0.1" ) }}:2380
+    - --initial-cluster={% for node in etcd_nodes %}{% if loop.index0 != 0 %},{% endif %}infra{{ loop.index0 }}=https://{{ node }}:2380{% endfor %}
+
+    - --initial-cluster-token=etcd-cluster
+    - --initial-cluster-state=new
+    - --data-dir=/var/lib/etcd
+    - --listen-metrics-urls=http://127.0.0.1:2381
+    - --snapshot-count=10000
+    image: {{ k8s_image_repository | default('registry.cn-hangzhou.aliyuncs.com/google_containers') }}/etcd:3.4.3-0
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -ec
+        - >
+          ETCDCTL_API=3 etcdctl --endpoints=127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.pem
+          --cert=/etc/kubernetes/pki/etcd/client.pem --key=/etc/kubernetes/pki/etcd/client-key.pem
+          get foo
+      failureThreshold: 10
+      initialDelaySeconds: 60
+      timeoutSeconds: 20
+      periodSeconds: 60
+    name: etcd
+    resources: {}
+    volumeMounts:
+    - mountPath: /var/lib/etcd
+      name: etcd-data
+    - mountPath: /etc/kubernetes/pki/etcd
+      name: etcd-certs
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate
+    name: etcd-certs
+  - hostPath:
+      path: /var/lib/etcd
+      type: DirectoryOrCreate
+    name: etcd-data
+status: {}
+

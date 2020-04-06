@@ -1,0 +1,66 @@
+---
+- name: copy ca-config.json
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/kubernetes/pki/etcd/{{ item }}"
+    mode: u=rw,g=r,o=r
+  with_items:
+    - ca-config.json
+    - ca-csr.json
+  become: True
+
+- name: copy peer-csr.json
+  template:
+    src: peer-csr.json.j2
+    dest: /etc/kubernetes/pki/etcd/peer-csr.json
+    mode: u=rw,g=r,o=r
+  become: True
+
+- name: copy server-csr.json
+  template:
+    src: server-csr.json.j2
+    dest: /etc/kubernetes/pki/etcd/server-csr.json
+    mode: u=rw,g=r,o=r
+  become: True
+
+- name: copy client-csr.json
+  template:
+    src: client-csr.json.j2
+    dest: /etc/kubernetes/pki/etcd/client-csr.json
+    mode: u=rw,g=r,o=r
+  become: True
+
+- name: copy create_etcd_cert.sh
+  copy:
+    src: create_etcd_cert.sh
+    dest: "{{ ansible_env.HOME }}/create_etcd_cert.sh"
+    mode: 0755
+
+- name: generate etcd certs
+  command: "{{ ansible_env.HOME }}/create_etcd_cert.sh"
+  args:
+    chdir: /etc/kubernetes/pki/etcd
+  become: True
+
+
+- name: remove all .json files
+  shell: rm -rf /etc/kubernetes/pki/etcd/*.json
+  become: True
+
+- name: remove all .csr files
+  shell: rm -rf /etc/kubernetes/pki/etcd/*.csr
+  become: True
+
+- name: remove create_etcd_cert.sh
+  file:
+    path: "{{ ansible_env.HOME }}/create_etcd_cert.sh"
+    state: absent
+
+- name: fetch the etcd cert files
+  fetch:
+    src: "/etc/kubernetes/pki/etcd/{{ item }}"
+    dest: /tmp/etcd-certs/
+    fail_on_missing: yes
+    flat: yes
+  with_items: "{{ etcd_cert_files }}"
+  become: True

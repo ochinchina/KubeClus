@@ -1,0 +1,77 @@
+---
+- name: check the /etc/kubernetes/pki exists
+  stat:
+    path: /etc/kubernetes/pki
+  register: stat_result_pki
+
+- name: create /etc/kubernetes/pki directory
+  file:
+    path: /etc/kubernetes/pki
+    state: directory
+    mode: 0755
+  when: not stat_result_pki.stat.exists
+
+- name: get all the kubernetes
+  set_fact:
+    kube_apiservers: "{{ hostvars | get_cluster_nodes( 'master' ) }}"
+
+- name: copy apiserver-csr.json
+  template:
+    src: "apiserver-csr.json.j2"
+    dest: /etc/kubernetes/pki/apiserver-csr.json
+  become: True
+
+- name: copy apiserver certificates .json
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/kubernetes/pki"
+    mode: 0755
+  with_items:
+    - ca-config.json
+    - ca-csr.json
+    - front-proxy-client-csr.json
+    - front-proxy-ca-csr.json
+    - apiserver-kubelet-client-csr.json
+    - apiserver-etcd-client-csr.json
+  become: True
+
+- name: copy create_k8s_certs.sh
+  copy:
+    src: create_k8s_certs.sh
+    dest: "{{ ansible_env.HOME }}/create_k8s_certs.sh"
+    mode: 0755
+
+- name: generate k8s certs
+  command: "{{ ansible_env.HOME }}/create_k8s_certs.sh"
+  args:
+    chdir: /etc/kubernetes/pki
+  become: True
+
+
+#- name: remove all .json files
+#  shell: rm -rf /etc/kubernetes/pki/*.json
+#  become: True
+
+#- name: remove all .csr files
+#  shell: rm -rf /etc/kubernetes/pki/*.csr
+#  become: True
+
+- name: remove create_k8s_certs.sh
+  file:
+    path: "{{ ansible_env.HOME }}/create_k8s_certs.sh"
+    state: absent
+
+- name: fetch k8s CA cert
+  fetch:
+    src: "/etc/kubernetes/pki/{{ item }}"
+    dest: /tmp/k8s-certs/
+    flat: yes
+    fail_on_missing: yes
+    validate_checksum: yes
+  with_items:
+    - ca.crt
+    - ca.key
+    - sa.key
+    - sa.pub
+  become: True
+

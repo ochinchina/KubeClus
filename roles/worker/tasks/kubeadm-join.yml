@@ -1,0 +1,25 @@
+---
+- name: print inventory_hostname 
+  debug:
+    msg: "{{ inventory_hostname }}"
+- name: find leader node in cluster
+  set_fact:
+    is_leader_node: "{{ hostvars | is_leader( ansible_host, 'master' ) }}"
+
+- name: get kubeadm join command
+  shell: |
+    token=$(kubeadm token generate)
+    join_cmd=$(kubeadm token create $token --print-join-command)
+    echo $join_cmd
+  register: kube_join_cmd
+  when: is_leader_node
+
+- name: print join command
+  debug:
+    msg: "{{ kube_join_cmd.stdout }}"
+  when: is_leader_node
+
+- name: save kubeadm join command
+  set_fact:
+    kubeadm_join: "{{ kube_join_cmd.stdout }}"
+  when: is_leader_node

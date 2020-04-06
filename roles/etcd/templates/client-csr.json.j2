@@ -1,0 +1,21 @@
+{
+    "CN": "kube-etcd-healthcheck-client",
+    "hosts": [
+	{% for node in etcd_nodes %}
+	"{{ node }}",
+	{% endfor %}
+        "127.0.0.1",
+	"::1",
+	"localhost"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+	    {
+		    "O": "system:masters"		    
+	    }
+    ]
+}
+

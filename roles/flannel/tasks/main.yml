@@ -1,0 +1,8 @@
+---
+- name: copy kube-flannel.yml
+  template:
+    src: kube-flannel.yml.j2
+    dest: "{{ ansible_env.HOME }}/kube-flannel.yml"
+
+- name: install flannel
+  command: "kubectl apply -f {{ ansible_env.HOME }}/kube-flannel.yml"

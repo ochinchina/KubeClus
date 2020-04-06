@@ -1,0 +1,21 @@
+{
+  "CN": "kube-apiserver",
+  "hosts": [
+    {% for item in kube_apiservers %}
+    "{{ item }}",
+    {% endfor %}
+    "localhost",
+    "127.0.0.1",
+    "10.96.0.1",
+    "kubernetes",
+    "kubernetes.default",
+    "kubernetes.default.svc",
+    "kubernetes.default.svc.cluster",
+    "kubernetes.default.svc.cluster.local"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}
+

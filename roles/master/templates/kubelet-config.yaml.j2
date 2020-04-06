@@ -1,0 +1,8 @@
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+address: {{ kube_apiserver_ip }}
+staticPodPath: /etc/kubernetes/manifests
+kubeletCgroups: systemd
+clusterDomain: cluster.local
+clusterDNS:
+- 10.96.0.10
